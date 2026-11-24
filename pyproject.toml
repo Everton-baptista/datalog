@@ -41,7 +41,7 @@ Changelog = "https://github.com/Everton-baptista/datalog/blob/main/CHANGELOG.md"
 [project.optional-dependencies]
 # Install with: pip install -e ".[dev]" (contributors) or pip install ".[sso,lineage]" (servers).
 sso = ["PyJWT[crypto]==2.15.1"]
-browser = ["playwright==1.61.0"]
+browser = ["playwright==1.65.2"]
 collector = ["PyYAML==6.0.3", "prometheus-client==0.24.1"]
 lineage = ["sqlglot==30.21.0"]
 warehouses = [
