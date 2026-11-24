@@ -42,7 +42,7 @@ Changelog = "https://github.com/Everton-baptista/datalog/blob/main/CHANGELOG.md"
 # Install with: pip install -e ".[dev]" (contributors) or pip install ".[sso,lineage]" (servers).
 sso = ["PyJWT[crypto]==2.15.1"]
 browser = ["playwright==1.61.0"]
-collector = ["PyYAML==6.0.3", "prometheus-client==0.24.1"]
+collector = ["PyYAML==6.0.4", "prometheus-client==0.24.1"]
 lineage = ["sqlglot==30.21.0"]
 warehouses = [
   "snowflake-connector-python==5.2.0",
