@@ -57,7 +57,7 @@ ai = [
   "openinference-instrumentation-groq==0.1.15",
   "openinference-semantic-conventions==0.1.43",
 ]
-benchmark = ["chdb==4.4.0", "duckdb==2.0.0"]
+benchmark = ["chdb==4.5.1", "duckdb==2.0.0"]
 lint = ["ruff==0.17.6"]
 dev = [
   "datalog[sso,browser,lineage,lint]",
