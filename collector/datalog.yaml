@@ -1,0 +1,95 @@
+# OpenTelemetry Collector Contrib 0.140.1
+extensions:
+  file_storage:
+    directory: ${env:DATALOG_COLLECTOR_QUEUE}
+    create_directory: true
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: ${env:DATALOG_COLLECTOR_GRPC:-127.0.0.1:4317}
+      http:
+        endpoint: ${env:DATALOG_COLLECTOR_HTTP:-127.0.0.1:4318}
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 256
+    spike_limit_mib: 64
+  transform/parse_logs:
+    error_mode: ignore
+    log_statements:
+      - 'merge_maps(log.cache, ParseJSON(log.body), "upsert") where IsString(log.body) and IsMatch(log.body, "^\\{")'
+      - 'set(log.attributes["error.type"], log.cache["error.type"]) where IsString(log.cache["error.type"])'
+  transform/default_privacy:
+    error_mode: propagate
+    trace_statements:
+      # Do not infer the context from spanevent: spans without events must also be filtered.
+      - context: span
+        statements:
+          - 'keep_keys(resource.attributes, ["service.name", "service.namespace", "service.version", "deployment.environment", "deployment.environment.name", "telemetry.sdk.name", "telemetry.sdk.version", "telemetry.sdk.language", "host.id", "host.name", "k8s.namespace.name", "k8s.pod.name", "k8s.pod.uid", "k8s.container.name", "container.id"])'
+          - 'keep_keys(scope.attributes, [])'
+          - 'keep_keys(span.attributes, ["http.request.method", "http.response.status_code", "http.route", "rpc.system", "rpc.service", "rpc.method", "db.system.name", "db.operation.name", "error.type", "gen_ai.operation.name", "gen_ai.provider.name", "gen_ai.system", "gen_ai.request.model", "gen_ai.response.model", "gen_ai.usage.input_tokens", "gen_ai.usage.output_tokens", "openinference.span.kind", "llm.provider", "llm.system", "llm.model_name", "llm.token_count.prompt", "llm.token_count.completion", "datalog.cost.usd", "datalog.cost.source", "datalog.recovered", "datalog.execution.version", "datalog.prompt.name", "datalog.prompt.version", "datalog.gen_ai.streaming", "datalog.gen_ai.ttft_ms", "datalog.gen_ai.first_token_ns", "gen_ai.response.time_to_first_chunk", "datalog.gateway.policy", "datalog.gateway.attempt", "tool.name"])'
+          - 'set(span.status.message, "")'
+          - 'set(span.trace_state, "")'
+      - context: spanevent
+        statements:
+          - 'keep_keys(spanevent.attributes, [])'
+    log_statements:
+      - 'keep_keys(resource.attributes, ["service.name", "service.namespace", "service.version", "deployment.environment", "deployment.environment.name", "telemetry.sdk.name", "telemetry.sdk.version", "telemetry.sdk.language", "host.id", "host.name", "k8s.namespace.name", "k8s.pod.name", "k8s.pod.uid", "k8s.container.name", "container.id"])'
+      - 'keep_keys(scope.attributes, [])'
+      - 'keep_keys(log.attributes, ["log.record.uid", "error.type"])'
+      - 'set(log.body, "")'
+    metric_statements:
+      - 'keep_keys(resource.attributes, ["service.name", "service.namespace", "service.version", "deployment.environment", "deployment.environment.name", "telemetry.sdk.name", "telemetry.sdk.version", "telemetry.sdk.language", "host.id", "host.name", "k8s.namespace.name", "k8s.pod.name", "k8s.pod.uid", "k8s.container.name", "container.id"])'
+      - 'keep_keys(scope.attributes, [])'
+      - 'keep_keys(datapoint.attributes, ["http.route", "http.request.method", "http.response.status_code", "error.type"])'
+  batch:
+    timeout: 200ms
+    send_batch_size: 512
+    send_batch_max_size: 512
+
+exporters:
+  otlphttp/datalog:
+    traces_endpoint: ${env:DATALOG_ENDPOINT}/v1/traces?project=${env:DATALOG_PROJECT}
+    logs_endpoint: ${env:DATALOG_ENDPOINT}/v1/logs?project=${env:DATALOG_PROJECT}
+    metrics_endpoint: ${env:DATALOG_ENDPOINT}/v1/metrics?project=${env:DATALOG_PROJECT}
+    headers:
+      Authorization: Bearer ${env:DATALOG_INGESTION_KEY}
+    compression: gzip
+    timeout: 10s
+    sending_queue:
+      enabled: true
+      storage: file_storage
+      queue_size: 1000
+      num_consumers: 1
+    retry_on_failure:
+      enabled: true
+      initial_interval: 500ms
+      max_interval: 5s
+      max_elapsed_time: 0s
+
+service:
+  telemetry:
+    metrics:
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: ${env:DATALOG_COLLECTOR_METRICS_HOST:-127.0.0.1}
+                port: ${env:DATALOG_COLLECTOR_METRICS_PORT:-8888}
+  extensions: [file_storage]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, transform/default_privacy, batch]
+      exporters: [otlphttp/datalog]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, transform/parse_logs, transform/default_privacy, batch]
+      exporters: [otlphttp/datalog]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, transform/default_privacy, batch]
+      exporters: [otlphttp/datalog]

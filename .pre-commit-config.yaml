@@ -1,0 +1,15 @@
+# Install once with: pip install pre-commit && pre-commit install
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.6
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+  - repo: local
+    hooks:
+      - id: biome-lint
+        name: biome lint
+        entry: npx --yes @biomejs/biome@2.6.5 lint --no-errors-on-unmatched
+        language: system
+        types_or: [javascript]
+        pass_filenames: true
