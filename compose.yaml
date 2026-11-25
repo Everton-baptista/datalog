@@ -1,0 +1,84 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: datalog
+      POSTGRES_USER: datalog
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    ports:
+      - "127.0.0.1:${DATALOG_PG_PORT:-55432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U datalog -d datalog"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  datalog:
+    profiles: [stack]
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATALOG_COMPOSE_DATABASE_URL:-postgresql://datalog:${POSTGRES_PASSWORD}@postgres:5432/datalog}
+      DATALOG_PUBLIC_ORIGIN: ${DATALOG_PUBLIC_ORIGIN:-}
+      DATALOG_INTERNAL_METRICS_TOKEN: ${DATALOG_INTERNAL_METRICS_TOKEN:-}
+      DATALOG_ALERT_DESTINATIONS: ${DATALOG_ALERT_DESTINATIONS:-}
+      DATALOG_MODEL_ADAPTERS: ${DATALOG_MODEL_ADAPTERS:-}
+      DATALOG_DATA_SOURCES: ${DATALOG_DATA_SOURCES:-}
+      DATALOG_SYNTHETIC_TARGETS: ${DATALOG_SYNTHETIC_TARGETS:-}
+      DATALOG_CHROMIUM: ${DATALOG_CHROMIUM:-}
+      DATALOG_PROBE_LOCATION: ${DATALOG_PROBE_LOCATION:-}
+      DATALOG_OIDC_ISSUER: ${DATALOG_OIDC_ISSUER:-}
+      DATALOG_OIDC_CLIENT_ID: ${DATALOG_OIDC_CLIENT_ID:-}
+      DATALOG_OIDC_CLIENT_SECRET: ${DATALOG_OIDC_CLIENT_SECRET:-}
+    ports:
+      - "127.0.0.1:${DATALOG_APP_PORT:-4310}:4310"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4310/api/health',timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  queue-init:
+    profiles: [collector]
+    image: busybox:1.37
+    command: ["sh", "-c", "chown 10001:10001 /queue && chmod 0700 /queue"]
+    volumes:
+      - collector_queue:/queue
+
+  collector:
+    profiles: [collector]
+    image: otel/opentelemetry-collector-contrib:0.140.1
+    user: "10001:10001"
+    depends_on:
+      datalog:
+        condition: service_healthy
+      queue-init:
+        condition: service_completed_successfully
+    command: ["--config=/etc/datalog/collector.yaml"]
+    environment:
+      DATALOG_COLLECTOR_QUEUE: /queue
+      DATALOG_COLLECTOR_GRPC: 0.0.0.0:4317
+      DATALOG_COLLECTOR_HTTP: 0.0.0.0:4318
+      DATALOG_COLLECTOR_METRICS_HOST: 0.0.0.0
+      DATALOG_ENDPOINT: http://datalog:4310
+      DATALOG_PROJECT: ${DATALOG_PROJECT:-local}
+      DATALOG_INGESTION_KEY: ${DATALOG_INGESTION_KEY:-}
+    ports:
+      - "127.0.0.1:${DATALOG_OTLP_GRPC_PORT:-4317}:4317"
+      - "127.0.0.1:${DATALOG_OTLP_HTTP_PORT:-4318}:4318"
+      - "127.0.0.1:${DATALOG_QUEUE_METRICS_PORT:-8888}:8888"
+    volumes:
+      - ./collector/datalog.yaml:/etc/datalog/collector.yaml:ro
+      - collector_queue:/queue
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  collector_queue:

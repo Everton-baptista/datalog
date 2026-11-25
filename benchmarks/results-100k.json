@@ -1,0 +1,77 @@
+{
+  "fixture": {
+    "spans": 100000,
+    "read_clients": 4,
+    "age_distribution_days": 8,
+    "high_cardinality_values": 100000
+  },
+  "host": {
+    "platform": "aarch64",
+    "python": "3.12.3",
+    "cpu_visible": 20
+  },
+  "datalog_http": {
+    "accepted_per_second": 14960.0,
+    "stored": 100000,
+    "rejected": 0,
+    "loss": 0,
+    "ingest_p95_ms": 83.535,
+    "concurrent_query_p95_ms": 31.534,
+    "concurrent_queries": 394,
+    "last_batch_ack_to_visible_probe_ms": 3.681,
+    "compressed_wire_bytes_per_span": 22.49
+  },
+  "storage": {
+    "queries_by_window": {
+      "1d": {
+        "postgresql": {
+          "queries": 48,
+          "p95_ms": 12.009
+        },
+        "clickhouse_embedded": {
+          "queries": 48,
+          "p95_ms": 14.453
+        },
+        "parquet_duckdb": {
+          "queries": 48,
+          "p95_ms": 7.203
+        }
+      },
+      "7d": {
+        "postgresql": {
+          "queries": 48,
+          "p95_ms": 49.52
+        },
+        "clickhouse_embedded": {
+          "queries": 48,
+          "p95_ms": 17.016
+        },
+        "parquet_duckdb": {
+          "queries": 48,
+          "p95_ms": 7.094
+        }
+      }
+    },
+    "bytes_per_span": {
+      "postgresql": 983.45,
+      "clickhouse_embedded": 30.29,
+      "parquet_duckdb": 10.83
+    },
+    "versions": {
+      "postgresql": "18.6 (Ubuntu 18.6-1.pgdg24.04+2)",
+      "clickhouse": "26.9.2.1",
+      "chdb": "4.4.0",
+      "duckdb": "2.0.0"
+    }
+  },
+  "retention": {
+    "7d": {
+      "retained": 87500,
+      "sweep_ms": 98.24
+    },
+    "1d": {
+      "retained": 12500,
+      "sweep_ms": 525.75
+    }
+  }
+}

@@ -1,0 +1,35 @@
+# Run one per project. Each sampling replica has a separate persistent queue.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: ${env:DATALOG_ROUTER_GRPC:-127.0.0.1:5317}
+      http:
+        endpoint: ${env:DATALOG_ROUTER_HTTP:-127.0.0.1:5318}
+exporters:
+  loadbalancing:
+    routing_key: traceID
+    resolver:
+      static:
+        hostnames:
+          - ${env:DATALOG_SAMPLER_A:-127.0.0.1:14317}
+          - ${env:DATALOG_SAMPLER_B:-127.0.0.1:24317}
+    protocol:
+      otlp:
+        tls:
+          insecure: true
+  otlp/signals:
+    endpoint: ${env:DATALOG_SAMPLER_A:-127.0.0.1:14317}
+    tls:
+      insecure: true
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [loadbalancing]
+    logs:
+      receivers: [otlp]
+      exporters: [otlp/signals]
+    metrics:
+      receivers: [otlp]
+      exporters: [otlp/signals]

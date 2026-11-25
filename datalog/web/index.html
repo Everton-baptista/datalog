@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#FAFAFB">
+  <meta name="description" content="Datalog — logs, métricas e alertas em um só lugar.">
+  <title>Datalog · Observabilidade</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0A0F'/%3E%3Cg transform='translate%2812 14.6%29 scale%28.0526%29' fill='%23F4F4F7'%3E%3Cdefs%3E%3Cmask id='m' maskUnits='userSpaceOnUse' x='0' y='0' width='760' height='660'%3E%3Crect width='760' height='660' fill='%23fff'/%3E%3Ccircle cx='491' cy='381' r='262' fill='%23777'/%3E%3C/mask%3E%3C/defs%3E%3Ccircle cx='491' cy='381' r='253' fill='none' stroke='%23F4F4F7' stroke-width='22'/%3E%3Ccircle cx='277' cy='278' r='277' mask='url%28%23m%29'/%3E%3Ccircle cx='628' cy='557' r='92'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="preload" href="/assets/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/brand.js"></script>
+  <script src="/i18n-en.js" defer></script>
+  <script src="/i18n.js" defer></script>
+  <script src="/i18n-api-pt.js" defer></script>
+  <script src="/ai.js" defer></script>
+  <script src="/traces.js" defer></script>
+  <script src="/workspace.js" defer></script>
+  <script src="/platform.js" defer></script>
+  <script src="/data.js" defer></script>
+  <script src="/charts.js" defer></script>
+  <script src="/agentic.js" defer></script>
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main class="signin" id="login-panel" hidden>
+    <section class="panel signin-card">
+      <div class="signin-top"><span class="signin-brand"><span data-brand-mark></span>Datalog</span><span class="signin-tools"><span data-theme-toggle></span><span data-lang-switch></span></span></div>
+      <div class="eyebrow">SYNAPSEDEV · OBSERVABILIDADE</div>
+      <h1>Entre no Datalog</h1>
+      <form id="login-form">
+        <label>Usuário<input name="username" autocomplete="username" required maxlength="80"></label>
+        <label>Senha<input name="password" type="password" autocomplete="current-password" required maxlength="256"></label>
+        <button class="button primary" type="submit">Entrar</button>
+        <a id="login-oidc" class="button" href="/api/auth/oidc/start" hidden>Entrar com SSO</a>
+        <p role="alert" id="login-error"></p>
+      </form>
+    </section>
+  </main>
+  <div id="workspace-shell" hidden>
+  <aside class="sidebar">
+    <a class="brand" href="#overview" aria-label="Datalog, visão geral"><span data-brand-mark></span><span class="brand-name">Datalog<small>by SynapseDev</small></span></a>
+    <button class="workspace" id="workspace"><span class="workspace-avatar">D</span><span><strong>Datalog</strong><small>Ambiente de observabilidade</small></span><span class="chevron">⌄</span></button>
+    <div class="nav-label">OBSERVABILIDADE</div>
+    <nav id="navigation" aria-label="Navegação principal"></nav>
+    <div class="sidebar-bottom"><div class="local-status"><span class="status-dot"></span> Instância ativa <span>v0.3</span></div><div class="profile"><span class="user-avatar">DL</span><span><strong>Workspace</strong><small>Instância Datalog</small></span><span class="profile-mark">⌘</span></div></div>
+  </aside>
+  <div class="app-shell">
+    <header class="topbar"><div class="breadcrumbs">Workspace <span>/</span> <strong id="breadcrumb">Visão geral</strong></div><div class="topbar-right"><span data-theme-toggle></span><span data-lang-switch></span><span class="local-chip"><span class="status-dot"></span> Self-hosted</span><a href="#ingestion" class="docs-link">Conectar aplicação ↗</a><span id="user-label"></span><button class="button" id="signout">Sair</button></div></header>
+    <main>
+      <div id="demo-banner" class="demo-banner" hidden><span>◈ <strong>Modo demonstração</strong> · Dados sintéticos para explorar o Datalog.</span><button id="leave-demo">Voltar aos dados reais ↗</button></div>
+      <div class="page-heading"><div><div class="eyebrow">SEU AMBIENTE, EM FOCO</div><h1 id="page-title">Visão geral</h1><p id="page-subtitle">Entenda o que acontece. Encontre o que importa.</p></div><div class="heading-actions"><span class="refresh-label" id="refresh-label">Atualização automática · 10s</span><button class="button icon-button" id="refresh" aria-label="Atualizar dados">↻</button><button class="button primary" id="primary-action">＋ Conectar aplicação</button></div></div>
+      <section class="filterbar" aria-label="Filtros globais"><div class="filter-left"><label class="filter"><span>Projeto</span><select id="project" aria-label="Projeto"></select></label><label class="filter"><span>Ambiente</span><select id="env" aria-label="Ambiente"><option value="">Todos os ambientes</option></select></label><label class="filter"><span>Serviço</span><select id="service" aria-label="Serviço"><option value="">Todos os serviços</option></select></label></div><div class="time-filter" id="range" role="radiogroup" aria-label="Intervalo de tempo"><button type="button" role="radio" data-range="900">15 min</button><button type="button" role="radio" data-range="3600">1 h</button><button type="button" role="radio" data-range="86400">24 h</button><button type="button" role="radio" data-range="604800">7 d</button><button type="button" role="radio" data-range="2592000">30 d</button></div></section>
+      <div id="error-banner" class="error-banner" role="alert" hidden></div>
+      <div id="content" aria-busy="true"><div class="loading">Carregando seu ambiente…</div></div>
+      <footer><span><strong>Datalog</strong> by SynapseDev · Clareza em cada sinal.</span><span>Instância Datalog · <span id="updated">Aguardando dados</span></span></footer>
+    </main>
+  </div>
+  </div>
+  <dialog id="modal"><div id="modal-content"></div></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>

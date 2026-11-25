@@ -1,0 +1,94 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "datalog"
+description = "Self-hosted observability for applications and AI agents: logs, metrics, OTLP traces, LLM runs and data quality."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+authors = [{ name = "SynapseAI Dev" }]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Operating System :: POSIX :: Linux",
+  "Topic :: System :: Monitoring",
+]
+dynamic = ["version"]
+dependencies = [
+  "googleapis-common-protos==1.76.0",
+  "opentelemetry-proto==1.45.2",
+  "psycopg[binary]==3.3.6",
+  "psycopg-pool==3.3.3",
+  "typing-extensions==4.16.0",
+]
+keywords = ["observability", "opentelemetry", "otlp", "llm", "ai-agents", "logs", "tracing", "data-quality"]
+
+[project.urls]
+Homepage = "https://github.com/Everton-baptista/datalog"
+Documentation = "https://github.com/Everton-baptista/datalog/tree/main/docs"
+Issues = "https://github.com/Everton-baptista/datalog/issues"
+Changelog = "https://github.com/Everton-baptista/datalog/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+# Install with: pip install -e ".[dev]" (contributors) or pip install ".[sso,lineage]" (servers).
+sso = ["PyJWT[crypto]==2.15.1"]
+browser = ["playwright==1.61.0"]
+collector = ["PyYAML==6.0.3", "prometheus-client==0.24.1"]
+lineage = ["sqlglot==30.21.0"]
+warehouses = [
+  "snowflake-connector-python==5.2.0",
+  "google-cloud-bigquery==3.47.0",
+  "databricks-sql-connector==4.9.0",
+]
+ai = [
+  "anthropic==0.84.0",
+  "groq==1.0.0",
+  "openinference-instrumentation==0.1.75",
+  "openinference-instrumentation-anthropic==1.0.1",
+  "openinference-instrumentation-groq==0.1.15",
+  "openinference-semantic-conventions==0.1.43",
+]
+benchmark = ["chdb==4.4.0", "duckdb==2.0.0"]
+lint = ["ruff==0.17.6"]
+dev = [
+  "datalog[sso,browser,lineage,lint]",
+  "opentelemetry-exporter-otlp-proto-http==1.45.2",
+  "opentelemetry-instrumentation-urllib==0.66b2",
+  "opentelemetry-instrumentation-sqlite3==0.66b2",
+]
+
+[project.scripts]
+datalog = "datalog.app:main"
+datalog-manage = "datalog.manage:main"
+
+[tool.setuptools.packages.find]
+include = ["datalog*"]
+
+[tool.setuptools.package-data]
+datalog = ["web/*", "web/assets/*", "migrations/*.sql", "profiling.cjs"]
+
+[tool.setuptools.dynamic]
+version = { attr = "datalog.__version__" }
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+extend-exclude = [".data", ".venv"]
+
+[tool.ruff.lint]
+# Pyflakes, syntax/runtime errors and bugbear. B905 (zip strict) is not enforced:
+# several zips intentionally pair sequences of different lengths.
+select = ["E4", "E7", "E9", "F", "B"]
+ignore = ["B905"]
+
+[tool.ruff.format]
+quote-style = "preserve"

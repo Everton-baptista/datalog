@@ -1,0 +1,29 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.5/schema.json",
+  "files": {
+    "includes": ["datalog/web/**/*.js", "datalog/profiling.cjs", "reporters/**", "examples/**/*.js"]
+  },
+  "formatter": { "enabled": false },
+  "assist": { "enabled": false },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "noUnusedVariables": "off",
+        "noUnusedFunctionParameters": "warn"
+      },
+      "suspicious": {
+        "noRedundantUseStrict": "off",
+        "useIterableCallbackReturn": "off",
+        "noShadowRestrictedNames": "warn"
+      },
+      "style": { "useTemplate": "off" },
+      "complexity": { "useOptionalChain": "warn", "useArrowFunction": "warn" },
+      "performance": { "useDomNodeTextContent": "warn" }
+    }
+  },
+  "overrides": [
+    { "includes": ["datalog/web/app.js"], "linter": { "rules": { "suspicious": { "noTemplateCurlyInString": "off" } } } }
+  ]
+}
